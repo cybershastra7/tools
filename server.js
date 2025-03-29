@@ -1,6 +1,5 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const fs = require("fs");
 const express = require("express");
 const path = require("path");
 
@@ -80,14 +79,12 @@ async function crawlWebsite(url) {
     };
 }
 
-// Set up Express server
 const app = express();
 const port = 3000;
 
-// Serve the HTML file from the same folder
-app.use(express.static(__dirname));
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, "public")));
 
-// API route for crawling
 app.get("/crawl", async (req, res) => {
     const url = req.query.url;
     if (!url) {
@@ -103,7 +100,6 @@ app.get("/crawl", async (req, res) => {
     }
 });
 
-// Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
