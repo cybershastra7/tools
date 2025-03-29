@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Crawler</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .results { margin-top: 20px; }
+        .loading { font-weight: bold; color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Website Crawler</h1>
+    <p>Enter a website URL to extract endpoints and analyze JavaScript files:</p>
+    <input type="text" id="url" placeholder="https://example.com" style="width: 300px;">
+    <button onclick="crawlWebsite()">Crawl</button>
+
+    <div id="results" class="results"></div>
+
+    <script>
+        async function crawlWebsite() {
+            const url = document.getElementById('url').value;
+            if (!url) {
+                alert('Please enter a valid URL.');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p class="loading">Crawling the website...</p>';
+
+            try {
+                const response = await fetch(`/crawl?url=${encodeURIComponent(url)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to crawl the website.');
+                }
+                const data = await response.json();
+                resultsDiv.innerHTML = `
+                    <h2>Results</h2>
+                    <h3>Site Endpoints:</h3>
+                    <ul>${data.siteEndpoints.map(endpoint => `<li>${endpoint}</li>`).join('')}</ul>
+                    <h3>JavaScript Endpoints:</h3>
+                    <ul>${data.jsEndpoints.map(endpoint => `<li>${endpoint}</li>`).join('')}</ul>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
