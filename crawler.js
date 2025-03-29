@@ -1,6 +1,8 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
+const express = require("express");
+const path = require("path");
 
 // Regular expression to match API endpoints in JS files
 const endpointRegex = /(https?:\/\/[a-zA-Z0-9._\-\/]+(?:\/[a-zA-Z0-9._\-]*)*)/g;
@@ -60,7 +62,7 @@ async function crawlWebsite(url) {
     console.log(`Crawling website: ${url}`);
 
     const html = await fetchWebsite(url);
-    if (!html) return;
+    if (!html) return { siteEndpoints: [], jsEndpoints: [] };
 
     const baseURL = new URL(url).origin;
     const { endpoints: siteEndpoints, jsFiles } = await extractEndpointsFromHTML(html, baseURL);
@@ -72,19 +74,36 @@ async function crawlWebsite(url) {
         extracted.forEach((endpoint) => jsEndpoints.add(endpoint));
     }
 
-    console.log("Final Results:");
-    console.log("Site Endpoints:", Array.from(siteEndpoints));
-    console.log("JS Endpoints:", Array.from(jsEndpoints));
-
-    // Save results to a file
-    fs.writeFileSync("endpoints.json", JSON.stringify({
+    return {
         siteEndpoints: Array.from(siteEndpoints),
         jsEndpoints: Array.from(jsEndpoints),
-    }, null, 2));
-
-    console.log("Results saved to endpoints.json");
+    };
 }
 
-// Usage example
-const websiteURL = "https://example.com"; // Replace with the target website
-crawlWebsite(websiteURL);
+// Set up Express server
+const app = express();
+const port = 3000;
+
+// Serve the HTML file from the same folder
+app.use(express.static(__dirname));
+
+// API route for crawling
+app.get("/crawl", async (req, res) => {
+    const url = req.query.url;
+    if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+    }
+
+    try {
+        const results = await crawlWebsite(url);
+        res.json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "An error occurred while crawling the website." });
+    }
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
