@@ -1,14 +1,12 @@
 const express = require("express");
+const crawlWebsite = require("./crawler"); // Import the crawlWebsite function
 const path = require("path");
-const crawlWebsite = require("./crawler"); // Import crawler logic
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
 
-// API route for crawling websites
 app.get("/crawl", async (req, res) => {
     const url = req.query.url;
     if (!url) {
@@ -19,12 +17,11 @@ app.get("/crawl", async (req, res) => {
         const results = await crawlWebsite(url);
         res.json(results);
     } catch (error) {
-        console.error("Crawling error:", error.message);
+        console.error(error);
         res.status(500).json({ error: "An error occurred while crawling the website." });
     }
 });
 
-// Start the server
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
